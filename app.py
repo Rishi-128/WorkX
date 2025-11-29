@@ -10,10 +10,8 @@ from flask_pymongo import PyMongo
 from bson import ObjectId
 
 app = Flask(__name__)
-app.config["MONGO_URI"] = "mongodb+srv://Rishi:Rishi%4012@cluster0.i2x9iiu.mongodb.net/workxDB?appName=Cluster0"
-app.secret_key = 'workx_secret_key_change_in_production'  # Change this in production!
-app.config['UPLOAD_FOLDER_USER'] = 'uploads/user_files'
-app.config['UPLOAD_FOLDER_COMPLETED'] = 'uploads/completed_work'
+app.config["MONGO_URI"] = os.environ.get("MONGO_URI")
+app.secret_key = os.environ.get("SECRET_KEY")
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 app.config['ALLOWED_EXTENSIONS'] = {'pdf', 'doc', 'docx', 'txt', 'png', 'jpg', 'jpeg'}
 
@@ -725,8 +723,4 @@ def get_rate_card():
 app_handler = app
 
 if __name__ == '__main__':
-    # Ensure upload directories exist
-    os.makedirs(app.config['UPLOAD_FOLDER_USER'], exist_ok=True)
-    os.makedirs(app.config['UPLOAD_FOLDER_COMPLETED'], exist_ok=True)
-    
     app.run(debug=True, host='0.0.0.0', port=5000)

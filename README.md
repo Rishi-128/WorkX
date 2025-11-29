@@ -116,19 +116,35 @@ pip install -r requirements.txt
 - Flask-PyMongo==2.3.0
 - pymongo==4.6.0
 
-### 3. Configure MongoDB
+### 3. Configure Environment Variables
 
-The app is pre-configured with MongoDB Atlas connection. To use your own database:
+**Important:** Never commit `.env` file to GitHub!
+
+1. Copy the example environment file:
+
+```bash
+cp .env.example .env
+```
+
+2. Edit `.env` and add your credentials:
+
+```env
+MONGO_URI=mongodb+srv://username:password@cluster.mongodb.net/workxDB?appName=Cluster0
+SECRET_KEY=your-secret-key-here
+```
+
+**To get MongoDB URI:**
 
 1. Create a MongoDB Atlas account at https://www.mongodb.com/cloud/atlas
 2. Create a cluster (free tier available)
-3. Get your connection string
-4. Update `app.py` line 13:
+3. Click "Connect" → "Connect your application"
+4. Copy the connection string and replace `<username>` and `<password>`
 
-```python
-app.config["MONGO_URI"] = "your_mongodb_connection_string"
+**To generate SECRET_KEY:**
+
+```bash
+python -c "import secrets; print(secrets.token_hex(32))"
 ```
-
 
 ### 4. Verify Directory Structure
 
@@ -648,14 +664,18 @@ git push origin master
    - Click "Add New Project"
    - Import your GitHub repository (Rishi-128/WorkX)
    - Vercel auto-detects `vercel.json` configuration
-   - Click "Deploy"
 
-3. **Environment Variables** (if needed):
+3. **Set Environment Variables** (REQUIRED):
 
-   - Add `MONGO_URI` in Vercel project settings
-   - Add `SECRET_KEY` for Flask sessions
+   In Vercel project settings → Environment Variables, add:
+
+   - `MONGO_URI` = Your MongoDB Atlas connection string
+   - `SECRET_KEY` = Your generated secret key (use `python -c "import secrets; print(secrets.token_hex(32))"`)
+
+   ⚠️ **Important:** These environment variables override the fallback values in `app.py` and keep your credentials secure in production.
 
 4. **Deploy**:
+   - Click "Deploy"
    - Vercel will build and deploy automatically
    - Get your live URL: `https://your-project.vercel.app`
 
