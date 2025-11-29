@@ -129,22 +129,8 @@ The app is pre-configured with MongoDB Atlas connection. To use your own databas
 app.config["MONGO_URI"] = "your_mongodb_connection_string"
 ```
 
-### 4. Add Admin Account
 
-Run the admin setup script:
-
-```bash
-python add_admin.py
-```
-
-This creates the default admin account:
-
-- Username: `admin`
-- Password: `admin123`
-
-**⚠️ Change the admin password after first login!**
-
-### 5. Verify Directory Structure
+### 4. Verify Directory Structure
 
 Ensure the following structure exists:
 
@@ -176,7 +162,7 @@ WorkX/
     └── completed_work/.gitkeep    # Placeholder (files in DB now)
 ```
 
-### 6. Run the Application
+### 5. Run the Application
 
 ```bash
 python app.py
