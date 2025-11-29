@@ -30,29 +30,40 @@ app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hour
 
-# MongoDB connection optimized for Vercel serverless
-try:
-    # Add SSL parameters directly to the URI if not already present
-    connection_uri = MONGO_URI
-    if '?' in connection_uri:
-        connection_uri += '&tls=true&tlsAllowInvalidCertificates=true&retryReads=false'
-    else:
-        connection_uri += '?tls=true&tlsAllowInvalidCertificates=true&retryReads=false'
-    
-    client = MongoClient(
-        connection_uri,
-        serverSelectionTimeoutMS=30000,
-        connectTimeoutMS=30000,
-        socketTimeoutMS=30000,
-        retryWrites=True
-    )
-    db = client.get_database()
-    # Test connection
-    client.admin.command('ping')
-    print("MongoDB connected successfully")
-except Exception as e:
-    print(f"MongoDB connection error: {e}")
-    db = None
+# MongoDB lazy connection for Vercel serverless
+_client = None
+_db = None
+
+def get_db():
+    """Lazy MongoDB connection - only connects when needed"""
+    global _client, _db
+    if _db is None:
+        try:
+            # Configure connection with minimal SSL for Vercel
+            connection_uri = MONGO_URI
+            if '?' in connection_uri:
+                connection_uri += '&tls=true&tlsAllowInvalidCertificates=true'
+            else:
+                connection_uri += '?tls=true&tlsAllowInvalidCertificates=true'
+            
+            _client = MongoClient(
+                connection_uri,
+                serverSelectionTimeoutMS=5000,
+                connectTimeoutMS=5000,
+                socketTimeoutMS=5000,
+                maxPoolSize=1,
+                minPoolSize=0
+            )
+            _db = _client.get_database()
+            _client.admin.command('ping')
+            print("MongoDB connected successfully")
+        except Exception as e:
+            print(f"MongoDB connection error: {e}")
+            raise
+    return _db
+
+# Initialize db reference (will be lazy loaded)
+db = None
 # Official rate card (display only - admin sets actual price)
 RATE_CARD = {
     'Blue Book': {'base': 15, 'fee': 2, 'unit': 'page'},
@@ -71,6 +82,7 @@ def allowed_file(filename):
 # MongoDB Database Helper Functions
 def fetch_all_tasks():
     """Get all tasks from database"""
+    db = get_db()
     tasks = list(db.tasks.find().sort('created_at', -1))
     # Convert ObjectId to string for JSON serialization
     for task in tasks:
@@ -80,6 +92,7 @@ def fetch_all_tasks():
 
 def get_task_by_id(task_id):
     """Get single task by ID"""
+    db = get_db()
     task = db.tasks.find_one({'task_id': task_id})
     if task and '_id' in task:
         task['_id'] = str(task['_id'])
@@ -87,6 +100,7 @@ def get_task_by_id(task_id):
 
 def save_task(task_data):
     """Insert or update task"""
+    db = get_db()
     task_id = task_data.get('task_id')
     existing_task = db.tasks.find_one({'task_id': task_id})
     
@@ -104,6 +118,7 @@ def save_task(task_data):
 
 def save_user_file(task_id, filename):
     """Save user uploaded file reference - MongoDB stores files array in task document"""
+    db = get_db()
     db.tasks.update_one(
         {'task_id': task_id},
         {'$push': {'user_uploaded_files': filename}}
@@ -112,6 +127,7 @@ def save_user_file(task_id, filename):
 
 def get_user_by_username(username):
     """Get user by username from users collection"""
+    db = get_db()
     user = db.users.find_one({'username': username})
     if user and '_id' in user:
         user['_id'] = str(user['_id'])
@@ -120,6 +136,7 @@ def get_user_by_username(username):
 
 def get_writer_by_username(username):
     """Get writer by username from writers collection"""
+    db = get_db()
     writer = db.writers.find_one({'username': username})
     if writer and '_id' in writer:
         writer['_id'] = str(writer['_id'])
@@ -128,6 +145,7 @@ def get_writer_by_username(username):
 
 def get_admin_by_username(username):
     """Get admin by username"""
+    db = get_db()
     admin = db.admin.find_one({'username': username})
     if admin and '_id' in admin:
         admin['_id'] = str(admin['_id'])
@@ -135,6 +153,7 @@ def get_admin_by_username(username):
 
 def create_user(user_data):
     """Create new user"""
+    db = get_db()
     user_doc = {
         'id': str(uuid.uuid4()),
         'username': user_data['username'],
@@ -148,6 +167,7 @@ def create_user(user_data):
 
 def create_writer(writer_data):
     """Create new writer"""
+    db = get_db()
     writer_doc = {
         'id': str(uuid.uuid4()),
         'username': writer_data['username'],
@@ -221,6 +241,7 @@ def signup():
             return jsonify({'error': 'Username already exists'}), 400
         
         # Check email
+        db = get_db()
         user_email_check = db.users.find_one({'email': email})
         writer_email_check = db.writers.find_one({'email': email})
         
@@ -449,6 +470,7 @@ def get_all_tasks():
         tasks = fetch_all_tasks()
         
         # Enrich tasks with full user and writer details
+        db = get_db()
         for task in tasks:
             # Add user details
             if task.get('user_id'):
@@ -481,6 +503,7 @@ def get_all_tasks():
 @writer_required
 def get_available_tasks():
     try:
+        db = get_db()
         tasks = list(db.tasks.find({
             '$or': [
                 {'writer_id': None},
@@ -520,6 +543,7 @@ def claim_task():
                 return jsonify({'error': 'This task has been claimed by another writer'}), 400
         
         # Update task
+        db = get_db()
         db.tasks.update_one(
             {'task_id': task_id},
             {'$set': {
@@ -538,6 +562,7 @@ def claim_task():
 @writer_required
 def get_my_tasks():
     try:
+        db = get_db()
         writer_id = session.get('user_id')
         tasks = list(db.tasks.find({'writer_id': writer_id}).sort('created_at', -1))
         
@@ -590,6 +615,7 @@ def mark_task_complete():
         if 'user_uploaded_files' in task and task['user_uploaded_files']:
             update_data['user_uploaded_files'] = files_without_data
         
+        db = get_db()
         db.tasks.update_one(
             {'task_id': task_id},
             {'$set': update_data}
@@ -606,6 +632,7 @@ def get_my_orders():
         if session.get('user_role') != 'user':
             return jsonify({'error': 'Unauthorized'}), 403
         
+        db = get_db()
         user_id = session.get('user_id')
         my_orders = list(db.tasks.find({'user_id': user_id}).sort('created_at', -1))
         
@@ -674,6 +701,7 @@ def update_task():
         
         # Execute update
         if update_data:
+            db = get_db()
             db.tasks.update_one(
                 {'task_id': task_id},
                 {'$set': update_data}
@@ -770,6 +798,7 @@ def health_check():
     """Health check endpoint to verify API is running"""
     try:
         # Test MongoDB connection
+        db = get_db()
         db.command('ping')
         return jsonify({
             'status': 'healthy',
