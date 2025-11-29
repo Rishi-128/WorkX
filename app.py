@@ -6,7 +6,7 @@ import json
 import uuid
 from datetime import datetime, date
 from functools import wraps
-from flask_pymongo import PyMongo
+from pymongo import MongoClient
 from bson import ObjectId
 
 app = Flask(__name__)
@@ -20,13 +20,6 @@ if not MONGO_URI:
 if not SECRET_KEY:
     raise ValueError("SECRET_KEY environment variable is not set")
 
-# Fix SSL issues on Vercel by adding SSL parameters
-if '?' in MONGO_URI:
-    MONGO_URI = f"{MONGO_URI}&tlsAllowInvalidCertificates=true"
-else:
-    MONGO_URI = f"{MONGO_URI}?tlsAllowInvalidCertificates=true"
-
-app.config["MONGO_URI"] = MONGO_URI
 app.secret_key = SECRET_KEY
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 app.config['ALLOWED_EXTENSIONS'] = {'pdf', 'doc', 'docx', 'txt', 'png', 'jpg', 'jpeg'}
@@ -37,8 +30,29 @@ app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hour
 
-mongo = PyMongo(app)
-db = mongo.db
+# MongoDB connection optimized for Vercel serverless
+try:
+    # Add SSL parameters directly to the URI if not already present
+    connection_uri = MONGO_URI
+    if '?' in connection_uri:
+        connection_uri += '&tls=true&tlsAllowInvalidCertificates=true&retryReads=false'
+    else:
+        connection_uri += '?tls=true&tlsAllowInvalidCertificates=true&retryReads=false'
+    
+    client = MongoClient(
+        connection_uri,
+        serverSelectionTimeoutMS=30000,
+        connectTimeoutMS=30000,
+        socketTimeoutMS=30000,
+        retryWrites=True
+    )
+    db = client.get_database()
+    # Test connection
+    client.admin.command('ping')
+    print("MongoDB connected successfully")
+except Exception as e:
+    print(f"MongoDB connection error: {e}")
+    db = None
 # Official rate card (display only - admin sets actual price)
 RATE_CARD = {
     'Blue Book': {'base': 15, 'fee': 2, 'unit': 'page'},
