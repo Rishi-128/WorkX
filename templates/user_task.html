@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track Order - WorkX</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <h1>WorkX</h1>
+                <p class="tagline">Campus Work Exchange</p>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="/">Home</a></li>
+                <li><a href="/pricing">Pricing</a></li>
+                <li><a href="/create-order">Create Order</a></li>
+                <li><a href="/user-task" class="active">Track Order</a></li>
+                <li><a href="/admin" class="admin-link">Admin</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section class="track-section">
+        <div class="container">
+            <div class="track-header">
+                <h2>Track Your Order</h2>
+                <p>Enter your Task ID to view order status and download files</p>
+            </div>
+
+            <div class="track-form-container">
+                <form id="trackForm" class="track-form">
+                    <div class="form-group">
+                        <label for="taskId">Task ID</label>
+                        <input type="text" id="taskId" class="form-control" placeholder="e.g., WXABC123" required>
+                        <small class="form-help">Check your email or SMS for the Task ID</small>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Track Order</button>
+                </form>
+            </div>
+
+            <div id="taskResult" class="task-result" style="display: none;">
+                <div class="task-result-card">
+                    <div class="result-header">
+                        <h3>Order Details</h3>
+                        <span id="resultTaskId" class="task-id-badge"></span>
+                    </div>
+
+                    <div class="result-body">
+                        <div class="result-row">
+                            <span class="label">Work Type:</span>
+                            <span class="value" id="resultWorkType"></span>
+                        </div>
+                        <div class="result-row">
+                            <span class="label">Pages/Units:</span>
+                            <span class="value" id="resultPages"></span>
+                        </div>
+                        <div class="result-row">
+                            <span class="label">Total Price:</span>
+                            <span class="value price" id="resultPrice"></span>
+                        </div>
+                        <div class="result-row">
+                            <span class="label">Deadline:</span>
+                            <span class="value" id="resultDeadline"></span>
+                        </div>
+                        <div class="result-row highlight">
+                            <span class="label">Status:</span>
+                            <span class="value" id="resultStatus"></span>
+                        </div>
+                    </div>
+
+                    <div class="status-timeline">
+                        <h4>Order Progress</h4>
+                        <div class="timeline">
+                            <div class="timeline-item" id="status-pending">
+                                <div class="timeline-marker"></div>
+                                <div class="timeline-content">
+                                    <h5>Order Received</h5>
+                                    <p>Your order has been submitted</p>
+                                </div>
+                            </div>
+                            <div class="timeline-item" id="status-assigned">
+                                <div class="timeline-marker"></div>
+                                <div class="timeline-content">
+                                    <h5>Writer Assigned</h5>
+                                    <p>Work assigned to a writer</p>
+                                </div>
+                            </div>
+                            <div class="timeline-item" id="status-progress">
+                                <div class="timeline-marker"></div>
+                                <div class="timeline-content">
+                                    <h5>In Progress</h5>
+                                    <p>Writer is working on your task</p>
+                                </div>
+                            </div>
+                            <div class="timeline-item" id="status-completed">
+                                <div class="timeline-marker"></div>
+                                <div class="timeline-content">
+                                    <h5>Completed</h5>
+                                    <p>Work verified and ready</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="downloadSection" class="download-section" style="display: none;">
+                        <div class="download-card">
+                            <div class="download-icon">📥</div>
+                            <h4>Your Work is Ready!</h4>
+                            <p>Click below to download your completed work</p>
+                            <button id="downloadBtn" class="btn btn-success btn-large">Download File</button>
+                        </div>
+
+                        <div class="payment-info">
+                            <h4>💰 Payment Information</h4>
+                            <p><strong>Amount to Pay:</strong> ₹<span id="paymentAmount"></span></p>
+                            <p>Please pay the admin offline (Cash/UPI) to complete the transaction.</p>
+                            <p class="text-muted">Payment is required after you verify the quality of work.</p>
+                        </div>
+                    </div>
+
+                    <div id="notReadySection" class="info-message" style="display: none;">
+                        <p>⏳ Your work is still in progress. Please check back later.</p>
+                        <p>We will complete your order by the deadline.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="errorMessage" class="error-message" style="display: none;">
+                <p>❌ Task not found. Please check your Task ID and try again.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="help-section">
+        <div class="container">
+            <h3>Need Help?</h3>
+            <div class="help-grid">
+                <div class="help-card">
+                    <h4>Can't find your Task ID?</h4>
+                    <p>Check your email or SMS for the confirmation message sent when you created the order.</p>
+                </div>
+                <div class="help-card">
+                    <h4>Order taking too long?</h4>
+                    <p>All orders are completed by the deadline. Check the status timeline above for current progress.</p>
+                </div>
+                <div class="help-card">
+                    <h4>Payment questions?</h4>
+                    <p>Payment is offline only. Pay the admin after you download and verify the work quality.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 WorkX - Campus Work Exchange Platform</p>
+            <p>Complete Anonymity • Fair Pricing • Quality Verified</p>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        let currentTaskId = null;
+        let currentTask = null;
+
+        document.getElementById('trackForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const taskId = document.getElementById('taskId').value.trim();
+            
+            if (!taskId) {
+                alert('Please enter a Task ID');
+                return;
+            }
+
+            // Hide previous results
+            document.getElementById('taskResult').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'none';
+
+            try {
+                const response = await fetch(`/api/user/task/${taskId}`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    currentTaskId = taskId;
+                    currentTask = data;
+                    displayTaskResult(data);
+                } else {
+                    document.getElementById('errorMessage').style.display = 'block';
+                }
+            } catch (error) {
+                alert('Failed to fetch task: ' + error.message);
+            }
+        });
+
+        function displayTaskResult(task) {
+            document.getElementById('resultTaskId').textContent = task.task_id;
+            document.getElementById('resultWorkType').textContent = task.work_type;
+            document.getElementById('resultPages').textContent = task.pages;
+            document.getElementById('resultPrice').textContent = `₹${task.final_price}`;
+            document.getElementById('resultDeadline').textContent = task.deadline;
+            document.getElementById('resultStatus').textContent = task.status;
+            document.getElementById('paymentAmount').textContent = task.final_price;
+
+            // Update status timeline
+            updateTimeline(task.status);
+
+            // Show download section if work is ready
+            if (task.has_result && task.status === 'Completed') {
+                document.getElementById('downloadSection').style.display = 'block';
+                document.getElementById('notReadySection').style.display = 'none';
+            } else {
+                document.getElementById('downloadSection').style.display = 'none';
+                document.getElementById('notReadySection').style.display = 'block';
+            }
+
+            document.getElementById('taskResult').style.display = 'block';
+        }
+
+        function updateTimeline(status) {
+            // Reset all
+            document.querySelectorAll('.timeline-item').forEach(item => {
+                item.classList.remove('active', 'completed');
+            });
+
+            // Set completed/active states
+            document.getElementById('status-pending').classList.add('completed');
+
+            if (status === 'Assigned' || status === 'In Progress' || status === 'Completed' || status === 'Delivered') {
+                document.getElementById('status-assigned').classList.add('completed');
+            }
+
+            if (status === 'In Progress' || status === 'Completed' || status === 'Delivered') {
+                document.getElementById('status-progress').classList.add('completed');
+            }
+
+            if (status === 'Completed' || status === 'Delivered') {
+                document.getElementById('status-completed').classList.add('completed');
+            }
+
+            // Set active (current) state
+            if (status === 'Pending') {
+                document.getElementById('status-pending').classList.add('active');
+            } else if (status === 'Assigned') {
+                document.getElementById('status-assigned').classList.add('active');
+            } else if (status === 'In Progress') {
+                document.getElementById('status-progress').classList.add('active');
+            } else if (status === 'Completed' || status === 'Delivered') {
+                document.getElementById('status-completed').classList.add('active');
+            }
+        }
+
+        document.getElementById('downloadBtn').addEventListener('click', async () => {
+            if (!currentTaskId) return;
+
+            try {
+                window.location.href = `/api/download/${currentTaskId}`;
+            } catch (error) {
+                alert('Failed to download file: ' + error.message);
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,49 @@
+{
+  "users": [
+    {
+      "id": "6f855918-4652-45c4-ba00-8071c37cdf5c",
+      "username": "a",
+      "email": "a@gmail.com",
+      "password": "scrypt:32768:8:1$yARplxrDLPurj8Jg$787841989d44b45a6eb0a316564950e4aea423ce35fe58f432d1754e9e4062cebc6435bcb453360dc44339647c24bd0583ae5940b81305c0045079ea3c11389e",
+      "phone": "",
+      "created_at": "2025-11-15T22:37:07.986013",
+      "orders": []
+    },
+    {
+      "id": "e67b5e48-e149-4773-92df-f5fb00dc2906",
+      "username": "rushikesh",
+      "email": "rushikesh@gmail.com",
+      "password": "scrypt:32768:8:1$3OoGHFBpD5PFlTKt$6b527c7b272fa9e5547b7f1508069dde36331f424ebb86587db51a2184ff501d1c210e1079963e467c1e56d0951001bec84e807be021ec0b87444055600db7a3",
+      "phone": "1234567890",
+      "created_at": "2025-11-16T19:08:40.274611",
+      "orders": []
+    }
+  ],
+  "writers": [
+    {
+      "id": "79b84c73-5de3-4b60-b70b-236eecf718c5",
+      "username": "b",
+      "email": "b@gmail.com",
+      "password": "scrypt:32768:8:1$hDrN8kBD6MFEShIk$fc48c4754aef623762dbfe61d280fb91bd45bed9e2b335eb9c2b0eba47a2eff98551f45bf60a14f279272a0ddbf38527f928ddfe635309a0cd9d2a96f065e26b",
+      "phone": "",
+      "created_at": "2025-11-15T22:39:36.621429",
+      "completed_tasks": 0,
+      "earnings": 0
+    },
+    {
+      "id": "ea90851e-17b8-415a-94d5-71a3cf1582a7",
+      "username": "rohan",
+      "email": "rohan@gmail.com",
+      "password": "scrypt:32768:8:1$H6v3gfAbfOuckQuy$82dd1a35024da6f0ecbeb7429934f5bd15b00df7c21e1aed51ba05ca6bee07605d795edfa077a030986438a3b03bcbe4214a5a6b84434cb0cbc175c521b46e50",
+      "phone": "9087654321",
+      "created_at": "2025-11-16T19:12:00.432946",
+      "completed_tasks": 0,
+      "earnings": 0
+    }
+  ],
+  "admin": {
+    "username": "admin",
+    "password": "scrypt:32768:8:1$KNVR34ycZ4H5GPWq$f3be87a22a8d50d5e2122d5447039f070ddb2cd4c22e930e295bbb808329690dd87b7fc309588b839e24eca6d3502e5ce1dbcfebd4a48b891af1f509de8d7609",
+    "email": "admin@workx.com"
+  }
+}

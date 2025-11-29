@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard - WorkX</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <h1>WorkX</h1>
+                <p class="tagline">User Dashboard</p>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="/user-dashboard" class="active">My Orders</a></li>
+                <li><a href="/create-order">New Order</a></li>
+                <li><a href="/pricing">Pricing</a></li>
+                <li><a href="/logout">Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section class="dashboard-section">
+        <div class="container">
+            <div class="dashboard-header">
+                <h2>Welcome, <span id="username"></span>!</h2>
+                <a href="/create-order" class="btn btn-primary">Create New Order</a>
+            </div>
+
+            <div class="dashboard-stats">
+                <div class="stat-card">
+                    <h4>Total Orders</h4>
+                    <p class="stat-value" id="totalOrders">0</p>
+                </div>
+                <div class="stat-card">
+                    <h4>Pending</h4>
+                    <p class="stat-value" id="pendingOrders">0</p>
+                </div>
+                <div class="stat-card">
+                    <h4>In Progress</h4>
+                    <p class="stat-value" id="inProgressOrders">0</p>
+                </div>
+                <div class="stat-card">
+                    <h4>Completed</h4>
+                    <p class="stat-value" id="completedOrders">0</p>
+                </div>
+            </div>
+
+            <div class="orders-container">
+                <h3>My Orders</h3>
+                <div id="ordersLoading" class="loading">Loading your orders...</div>
+                <div id="ordersContent"></div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 WorkX - Campus Work Exchange Platform</p>
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById('username').textContent = '{{ session.username }}';
+
+        async function loadOrders() {
+            document.getElementById('ordersLoading').style.display = 'block';
+            document.getElementById('ordersContent').innerHTML = '';
+
+            try {
+                const response = await fetch('/api/user/my_orders');
+                const data = await response.json();
+
+                if (response.ok) {
+                    updateStats(data.orders);
+                    renderOrders(data.orders);
+                } else {
+                    alert('Error loading orders: ' + data.error);
+                }
+            } catch (error) {
+                alert('Failed to load orders: ' + error.message);
+            } finally {
+                document.getElementById('ordersLoading').style.display = 'none';
+            }
+        }
+
+        function updateStats(orders) {
+            document.getElementById('totalOrders').textContent = orders.length;
+            document.getElementById('pendingOrders').textContent = orders.filter(o => o.status === 'Pending').length;
+            document.getElementById('inProgressOrders').textContent = orders.filter(o => o.status === 'Assigned' || o.status === 'In Progress').length;
+            document.getElementById('completedOrders').textContent = orders.filter(o => o.status === 'Completed' || o.status === 'Delivered').length;
+        }
+
+        function renderOrders(orders) {
+            const container = document.getElementById('ordersContent');
+            
+            if (orders.length === 0) {
+                container.innerHTML = '<div class="no-orders"><p>You haven\'t created any orders yet.</p><a href="/create-order" class="btn btn-primary">Create Your First Order</a></div>';
+                return;
+            }
+
+            let html = '<div class="orders-grid">';
+            orders.forEach(order => {
+                const statusClass = order.status.toLowerCase().replace(' ', '-');
+                const priceDisplay = order.final_price ? `₹${order.final_price}` : 'TBD';
+                
+                html += `
+                    <div class="order-card status-${statusClass}">
+                        <div class="order-header">
+                            <h4>${order.task_id}</h4>
+                            <span class="status-badge status-${statusClass}">${order.status}</span>
+                        </div>
+                        <div class="order-body">
+                            <p><strong>Work Type:</strong> ${order.work_type}</p>
+                            <p><strong>Price:</strong> ${priceDisplay}</p>
+                            <p><strong>Deadline:</strong> ${order.deadline}</p>
+                            <p><strong>Created:</strong> ${new Date(order.created_at).toLocaleDateString()}</p>
+                            ${order.writer_username ? '<p><strong>Writer:</strong> ' + order.writer_username + '</p>' : '<p class="text-muted">No writer assigned yet</p>'}
+                            ${(order.status === 'Completed' || order.status === 'Delivered') && order.admin_uploaded_result ? '<p class="task-completed">✅ Work ready for download!</p>' : ''}
+                        </div>
+                        <div class="order-footer">
+                            ${(order.status === 'Completed' || order.status === 'Delivered') && order.admin_uploaded_result ? 
+                                '<a href="/api/download/' + order.task_id + '" class="btn btn-sm btn-success">📥 Download</a>' : 
+                                '<button class="btn btn-sm btn-secondary" disabled>⏳ ' + order.status + '</button>'}
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            
+            container.innerHTML = html;
+        }
+
+        loadOrders();
+    </script>
+</body>
+</html>

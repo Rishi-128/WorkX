@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - WorkX</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <h1>WorkX</h1>
+                <p class="tagline">Admin Dashboard</p>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="/">Home</a></li>
+                <li><a href="/admin" class="active admin-link">Admin Panel</a></li>
+                <li><a href="/logout" class="btn-logout">Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section class="admin-section">
+        <div class="container">
+            <div class="admin-header">
+                <h2>🛠️ Admin Dashboard</h2>
+                <button id="refreshBtn" class="btn btn-secondary">🔄 Refresh</button>
+            </div>
+
+            <div class="admin-stats">
+                <div class="stat-card">
+                    <h4>Total Orders</h4>
+                    <p class="stat-value" id="totalOrders">0</p>
+                </div>
+                <div class="stat-card">
+                    <h4>Pending</h4>
+                    <p class="stat-value" id="pendingOrders">0</p>
+                </div>
+                <div class="stat-card">
+                    <h4>In Progress</h4>
+                    <p class="stat-value" id="inProgressOrders">0</p>
+                </div>
+                <div class="stat-card">
+                    <h4>Completed</h4>
+                    <p class="stat-value" id="completedOrders">0</p>
+                </div>
+            </div>
+
+            <div class="admin-filters">
+                <select id="statusFilter" class="form-control">
+                    <option value="all">All Status</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Assigned">Assigned</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Delivered">Delivered</option>
+                </select>
+            </div>
+
+            <div class="tasks-container">
+                <div id="tasksLoading" class="loading">Loading tasks...</div>
+                <div id="tasksContent"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Edit Task Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3>Manage Task: <span id="modalTaskId"></span></h3>
+                <button class="modal-close" onclick="closeEditModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="editTaskForm" enctype="multipart/form-data">
+                    <input type="hidden" id="editTaskId" name="task_id">
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Work Type</label>
+                            <input type="text" id="editWorkType" class="form-control" disabled>
+                        </div>
+                        <div class="form-group">
+                            <label>Status</label>
+                            <input type="text" id="editCurrentStatus" class="form-control" disabled>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <strong>📊 Pricing:</strong> Price is determined after work completion by counting actual pages.
+                        Set the final price below when uploading the completed work.
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editPages">Actual Pages/Units <span class="required">*</span></label>
+                            <input type="number" id="editPages" name="pages" class="form-control" min="1" placeholder="Count actual pages in completed work">
+                            <small class="form-help">Count the actual number of pages after completion</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="editBasePrice">Base Price (₹) <span class="required">*</span></label>
+                            <input type="number" id="editBasePrice" name="base_price" class="form-control" min="0" step="0.01" placeholder="Pages × Rate">
+                            <small class="form-help">Calculate from rate card</small>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editFinalPrice">Final Price - User Pays (₹) <span class="required">*</span></label>
+                            <input type="number" id="editFinalPrice" name="final_price" class="form-control" min="0" step="0.01" placeholder="Base + Material + Surcharge">
+                            <small class="form-help">Include material cost and same-day surcharge if applicable</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="editWorkerPayout">Writer Payout (₹) <span class="required">*</span></label>
+                            <input type="number" id="editWorkerPayout" name="worker_payout" class="form-control" min="0" step="0.01" placeholder="Base price - Platform fee">
+                            <small class="form-help">Usually base price minus 12% platform fee</small>
+                        </div>
+                    </div>
+
+                    <div class="form-group" id="materialCostInfo" style="display: none;">
+                        <div class="alert alert-info">
+                            <strong>📦 Material Cost:</strong> <span id="materialCostDisplay"></span>
+                            <br><small id="materialOptionDisplay"></small>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>User Details</label>
+                        <textarea id="editUserContact" class="form-control" rows="2" disabled></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Writer Details</label>
+                        <textarea id="editWriterDetails" class="form-control" rows="2" disabled></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Deadline</label>
+                        <input type="text" id="editDeadline" class="form-control" disabled>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Notes</label>
+                        <textarea id="editNotes" class="form-control" rows="3" disabled></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="editStatus">Status <span class="required">*</span></label>
+                        <select id="editStatus" name="status" class="form-control" required>
+                            <option value="Pending">Pending</option>
+                            <option value="Assigned">Assigned</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Completed">Completed</option>
+                            <option value="Delivered">Delivered</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="editWriterId">Writer ID</label>
+                        <input type="text" id="editWriterId" name="writer_id" class="form-control" placeholder="e.g., WR-001">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="editCompletedFile">Upload Completed Work</label>
+                        <input type="file" id="editCompletedFile" name="completed_file" class="form-control" accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg">
+                        <small class="form-help">Upload the completed work file (Admin only)</small>
+                        <div id="currentFileInfo"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="editPaymentReceived" name="payment_received" value="true">
+                            ✅ Payment Received from User
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="editWriterPaid" name="writer_paid" value="true">
+                            💰 Writer Paid by Admin
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label>User Uploaded Files</label>
+                        <div id="userFilesInfo"></div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Update Task</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 WorkX - Admin Panel</p>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        let allTasks = [];
+
+        async function loadTasks() {
+            document.getElementById('tasksLoading').style.display = 'block';
+            document.getElementById('tasksContent').innerHTML = '';
+
+            try {
+                const response = await fetch('/api/admin/tasks');
+                const data = await response.json();
+
+                if (response.ok) {
+                    allTasks = data.tasks;
+                    updateStats(allTasks);
+                    renderTasks(allTasks);
+                } else {
+                    alert('Error loading tasks: ' + data.error);
+                }
+            } catch (error) {
+                alert('Failed to load tasks: ' + error.message);
+            } finally {
+                document.getElementById('tasksLoading').style.display = 'none';
+            }
+        }
+
+        function updateStats(tasks) {
+            document.getElementById('totalOrders').textContent = tasks.length;
+            document.getElementById('pendingOrders').textContent = tasks.filter(t => t.status === 'Pending').length;
+            document.getElementById('inProgressOrders').textContent = tasks.filter(t => t.status === 'Assigned' || t.status === 'In Progress').length;
+            document.getElementById('completedOrders').textContent = tasks.filter(t => t.status === 'Completed' || t.status === 'Delivered').length;
+        }
+
+        function renderTasks(tasks) {
+            const container = document.getElementById('tasksContent');
+            
+            if (tasks.length === 0) {
+                container.innerHTML = '<div class="no-tasks">No tasks found</div>';
+                return;
+            }
+
+            let html = '<div class="tasks-grid">';
+            tasks.forEach(task => {
+                const statusClass = task.status.toLowerCase().replace(' ', '-');
+                const paymentStatus = task.payment_received ? '✅' : '❌';
+                const writerPaidStatus = task.writer_paid ? '✅' : '❌';
+                
+                // User details
+                const userInfo = task.user_details 
+                    ? `${task.user_details.username} (${task.user_details.email}, ${task.user_details.phone})`
+                    : task.user_contact || 'Unknown';
+                
+                // Writer details
+                const writerInfo = task.writer_details
+                    ? `${task.writer_details.username} (${task.writer_details.email}, ${task.writer_details.phone})`
+                    : task.writer_id || 'Not Assigned';
+                
+                // Price display
+                const priceDisplay = task.final_price ? `₹${task.final_price}` : 'Not Set';
+                const materialInfo = task.material_cost > 0 ? ` (includes ₹${task.material_cost} material)` : '';
+                const sameDayInfo = task.is_same_day ? ' ⚡ Same-day' : '';
+                
+                html += `
+                    <div class="task-card status-${statusClass}">
+                        <div class="task-header">
+                            <h4>${task.task_id}</h4>
+                            <span class="status-badge status-${statusClass}">${task.status}</span>
+                        </div>
+                        <div class="task-body">
+                            <p><strong>User:</strong> ${userInfo}</p>
+                            <p><strong>Work:</strong> ${task.work_type}${sameDayInfo}</p>
+                            <p><strong>Pages:</strong> ${task.pages || 'TBD'} units</p>
+                            <p><strong>Price:</strong> ${priceDisplay}${materialInfo}</p>
+                            <p><strong>Writer:</strong> ${writerInfo}</p>
+                            <p><strong>Deadline:</strong> ${task.deadline}</p>
+                            <p><strong>Payment Received:</strong> ${paymentStatus}</p>
+                            <p><strong>Writer Paid:</strong> ${writerPaidStatus}</p>
+                            ${task.admin_uploaded_result ? '<p class="task-completed">📎 Work Uploaded</p>' : ''}
+                        </div>
+                        <div class="task-footer">
+                            <button onclick="openEditModal('${task.task_id}')" class="btn btn-sm btn-primary">Manage</button>
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            
+            container.innerHTML = html;
+        }
+
+        function openEditModal(taskId) {
+            const task = allTasks.find(t => t.task_id === taskId);
+            if (!task) return;
+
+            document.getElementById('modalTaskId').textContent = taskId;
+            document.getElementById('editTaskId').value = task.task_id;
+            document.getElementById('editWorkType').value = task.work_type;
+            document.getElementById('editCurrentStatus').value = task.status;
+            document.getElementById('editPages').value = task.pages || '';
+            document.getElementById('editBasePrice').value = task.base_price || '';
+            document.getElementById('editFinalPrice').value = task.final_price || '';
+            document.getElementById('editWorkerPayout').value = task.worker_payout || '';
+            
+            // User details
+            if (task.user_details) {
+                document.getElementById('editUserContact').value = 
+                    `${task.user_details.username}\nEmail: ${task.user_details.email}\nPhone: ${task.user_details.phone}`;
+            } else {
+                document.getElementById('editUserContact').value = task.user_contact || 'N/A';
+            }
+            
+            // Writer details
+            if (task.writer_details) {
+                document.getElementById('editWriterDetails').value = 
+                    `${task.writer_details.username}\nEmail: ${task.writer_details.email}\nPhone: ${task.writer_details.phone}\nCompleted: ${task.writer_details.completed_tasks} tasks\nEarnings: ₹${task.writer_details.earnings}`;
+            } else {
+                document.getElementById('editWriterDetails').value = task.writer_id ? task.writer_username || task.writer_id : 'Not Assigned';
+            }
+            
+            document.getElementById('editDeadline').value = task.deadline;
+            document.getElementById('editNotes').value = task.notes || 'N/A';
+            document.getElementById('editStatus').value = task.status;
+            document.getElementById('editWriterId').value = task.writer_id || '';
+            document.getElementById('editPaymentReceived').checked = task.payment_received;
+            document.getElementById('editWriterPaid').checked = task.writer_paid;
+
+            // Show material cost if applicable
+            if (task.material_cost && task.material_cost > 0) {
+                document.getElementById('materialCostInfo').style.display = 'block';
+                document.getElementById('materialCostDisplay').textContent = `₹${task.material_cost}`;
+                const optionText = task.material_option === 'buy' ? 'User requested to purchase material' : 'User will provide material';
+                let infoText = optionText;
+                if (task.is_same_day) {
+                    infoText += '<br><span style="color: #f59e0b; font-weight: 600;">⚡ Same-day order - Apply 25% surcharge</span>';
+                }
+                document.getElementById('materialOptionDisplay').innerHTML = infoText;
+            } else if (task.is_same_day) {
+                document.getElementById('materialCostInfo').style.display = 'block';
+                document.getElementById('materialCostDisplay').textContent = 'N/A';
+                document.getElementById('materialOptionDisplay').innerHTML = '<span style="color: #f59e0b; font-weight: 600;">⚡ Same-day order - Apply 25% surcharge</span>';
+            } else {
+                document.getElementById('materialCostInfo').style.display = 'none';
+            }
+
+            // Show current file info
+            if (task.admin_uploaded_result) {
+                document.getElementById('currentFileInfo').innerHTML = `<p class="current-file">Current: ${task.admin_uploaded_result}</p>`;
+            } else {
+                document.getElementById('currentFileInfo').innerHTML = '<p class="text-muted">No file uploaded yet</p>';
+            }
+
+            // Show user uploaded files
+            if (task.user_uploaded_files && task.user_uploaded_files.length > 0) {
+                let filesHtml = '<ul class="files-list">';
+                task.user_uploaded_files.forEach(file => {
+                    filesHtml += `<li>📎 ${file}</li>`;
+                });
+                filesHtml += '</ul>';
+                document.getElementById('userFilesInfo').innerHTML = filesHtml;
+            } else {
+                document.getElementById('userFilesInfo').innerHTML = '<p class="text-muted">No files uploaded</p>';
+            }
+
+            document.getElementById('editModal').style.display = 'flex';
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = 'none';
+            document.getElementById('editTaskForm').reset();
+        }
+
+        document.getElementById('editTaskForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            
+            try {
+                const response = await fetch('/api/admin/update_task', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert('Task updated successfully!');
+                    closeEditModal();
+                    loadTasks();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (error) {
+                alert('Failed to update task: ' + error.message);
+            }
+        });
+
+        document.getElementById('statusFilter').addEventListener('change', (e) => {
+            const filter = e.target.value;
+            if (filter === 'all') {
+                renderTasks(allTasks);
+            } else {
+                const filtered = allTasks.filter(t => t.status === filter);
+                renderTasks(filtered);
+            }
+        });
+
+        document.getElementById('refreshBtn').addEventListener('click', loadTasks);
+
+        // Load tasks on page load
+        loadTasks();
+
+        // Close modal on outside click
+        window.onclick = function(event) {
+            const modal = document.getElementById('editModal');
+            if (event.target == modal) {
+                closeEditModal();
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WorkX - Anonymous Student Work Exchange</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+   
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <h1>WorkX</h1>
+                <p class="tagline">Campus Work Exchange</p>
+            </div>
+            <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">
+                <span class="hamburger-icon">☰</span>
+            </button>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="/" class="active">Home</a></li>
+                <li><a href="/pricing">Pricing</a></li>
+                {% if session.get('user_id') %}
+                    {% if session.get('user_role') == 'user' %}
+                        <li><a href="/user-dashboard">Dashboard</a></li>
+                    {% elif session.get('user_role') == 'writer' %}
+                        <li><a href="/writer-dashboard">Dashboard</a></li>
+                    {% elif session.get('user_role') == 'admin' %}
+                        <li><a href="/admin">Admin Panel</a></li>
+                    {% endif %}
+                    <li><a href="/logout" class="btn-logout">Logout</a></li>
+                {% else %}
+                    <li><a href="/login">Login</a></li>
+                    <li><a href="/signup" class="btn-primary-nav">Sign Up</a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+
+    <script>
+        // Mobile menu toggle
+        document.getElementById('mobileMenuToggle').addEventListener('click', function() {
+            const navMenu = document.getElementById('navMenu');
+            navMenu.classList.toggle('active');
+        });
+
+        // Close menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const navMenu = document.getElementById('navMenu');
+            const menuToggle = document.getElementById('mobileMenuToggle');
+            
+            if (!navMenu.contains(event.target) && !menuToggle.contains(event.target)) {
+                navMenu.classList.remove('active');
+            }
+        });
+
+        // Close menu when clicking a link
+        document.querySelectorAll('.nav-menu a').forEach(link => {
+            link.addEventListener('click', function() {
+                document.getElementById('navMenu').classList.remove('active');
+            });
+        });
+    </script>
+
+    <header class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h2>Your Anonymous Academic Work Partner</h2>
+                <p>Get blue books, observations, records, PPTs, and reports done professionally. Completely anonymous. Verified by admin. Fair pricing.</p>
+                <div class="cta-buttons">
+                    {% if session.get('user_id') %}
+                        {% if session.get('user_role') == 'user' %}
+                            <a href="/user-dashboard" class="btn btn-primary">Go to Dashboard</a>
+                        {% elif session.get('user_role') == 'writer' %}
+                            <a href="/writer-dashboard" class="btn btn-primary">Browse Tasks</a>
+                        {% elif session.get('user_role') == 'admin' %}
+                            <a href="/admin" class="btn btn-primary">Admin Panel</a>
+                        {% endif %}
+                    {% else %}
+                        <a href="/signup" class="btn btn-primary">Get Started</a>
+                        <a href="/login" class="btn btn-secondary">Login</a>
+                    {% endif %}
+                    <a href="/pricing" class="btn btn-secondary">View Pricing</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section class="features">
+        <div class="container">
+            <h3>How WorkX Works</h3>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">📝</div>
+                    <h4>Submit Your Task</h4>
+                    <p>Choose work type, upload content, and specify requirements. Get instant price calculation.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">👤</div>
+                    <h4>Complete Anonymity</h4>
+                    <p>Admin routes everything. Users never meet writers. Safe and secure process.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">✅</div>
+                    <h4>Quality Verified</h4>
+                    <p>Admin checks all completed work before delivery. Only pay after verification.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💰</div>
+                    <h4>Fair Pricing</h4>
+                    <p>Transparent rates. 12% platform fee. Writers get fair compensation.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="calculator">
+        <div class="container">
+            <div class="calculator-card">
+                <h3>Quick Price Calculator</h3>
+                <p class="subtitle">See what your work will cost instantly</p>
+                
+                <div class="calculator-form">
+                    <div class="form-group">
+                        <label for="workType">Work Type</label>
+                        <select id="workType" class="form-control">
+                            <option value="">-- Select Work Type --</option>
+                            <option value="Blue Book">Blue Book</option>
+                            <option value="Observation">Observation</option>
+                            <option value="Record-Ruled">Record (Ruled)</option>
+                            <option value="Record-Unruled">Record (Unruled)</option>
+                            <option value="PPT">PPT (10 slides)</option>
+                            <option value="Word Doc">Word Document</option>
+                            <option value="Report">Report (Soft Copy)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="pages">Number of Pages / Units</label>
+                        <input type="number" id="pages" class="form-control" min="1" value="1" placeholder="Enter number">
+                    </div>
+
+                    <button id="calculateBtn" class="btn btn-primary">Calculate Price</button>
+                </div>
+
+                <div id="priceResult" class="price-result" style="display: none;">
+                    <div class="price-breakdown">
+                        <div class="price-row">
+                            <span>Base Price:</span>
+                            <span class="price-value">₹<span id="basePrice">0</span></span>
+                        </div>
+                        <div class="price-row">
+                            <span>Platform Fee (12%):</span>
+                            <span class="price-value">₹<span id="platformFee">0</span></span>
+                        </div>
+                        <div class="price-row total">
+                            <span><strong>You Pay:</strong></span>
+                            <span class="price-value"><strong>₹<span id="finalPrice">0</span></strong></span>
+                        </div>
+                        <div class="price-row writer">
+                            <span>Writer Gets:</span>
+                            <span class="price-value">₹<span id="workerPayout">0</span></span>
+                        </div>
+                    </div>
+                    <a href="/create-order" class="btn btn-success">Create This Order →</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="workflow">
+        <div class="container">
+            <h3>The WorkX Process</h3>
+            <div class="workflow-steps">
+                <div class="workflow-step">
+                    <div class="step-number">1</div>
+                    <h4>User Submits</h4>
+                    <p>You create order with requirements</p>
+                </div>
+                <div class="workflow-arrow">→</div>
+                <div class="workflow-step">
+                    <div class="step-number">2</div>
+                    <h4>Admin Assigns</h4>
+                    <p>Admin assigns work to writer anonymously</p>
+                </div>
+                <div class="workflow-arrow">→</div>
+                <div class="workflow-step">
+                    <div class="step-number">3</div>
+                    <h4>Writer Completes</h4>
+                    <p>Writer submits completed work to admin</p>
+                </div>
+                <div class="workflow-arrow">→</div>
+                <div class="workflow-step">
+                    <div class="step-number">4</div>
+                    <h4>Admin Verifies</h4>
+                    <p>Admin checks quality and uploads</p>
+                </div>
+                <div class="workflow-arrow">→</div>
+                <div class="workflow-step">
+                    <div class="step-number">5</div>
+                    <h4>User Downloads</h4>
+                    <p>You download and pay admin offline</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 WorkX - Campus Work Exchange Platform</p>
+            <p>Complete Anonymity • Fair Pricing • Quality Verified</p>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        // Price calculator functionality
+        document.getElementById('calculateBtn').addEventListener('click', async () => {
+            const workType = document.getElementById('workType').value;
+            const pages = parseInt(document.getElementById('pages').value);
+
+            if (!workType) {
+                alert('Please select a work type');
+                return;
+            }
+
+            if (!pages || pages < 1) {
+                alert('Please enter valid number of pages/units');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/calculate_price', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ work_type: workType, pages: pages })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    document.getElementById('basePrice').textContent = data.base_price;
+                    document.getElementById('platformFee').textContent = data.platform_fee;
+                    document.getElementById('finalPrice').textContent = data.final_price;
+                    document.getElementById('workerPayout').textContent = data.worker_payout;
+                    document.getElementById('priceResult').style.display = 'block';
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (error) {
+                alert('Failed to calculate price: ' + error.message);
+            }
+        });
+    </script>
+</body>
+</html>

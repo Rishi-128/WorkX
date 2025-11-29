@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - WorkX</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <h1>WorkX</h1>
+                <p class="tagline">Campus Work Exchange</p>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="/">Home</a></li>
+                <li><a href="/pricing">Pricing</a></li>
+                <li><a href="/login">Login</a></li>
+                <li><a href="/signup" class="active">Sign Up</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section class="auth-section">
+        <div class="container">
+            <div class="auth-container">
+                <div class="auth-card">
+                    <h2>Create Account</h2>
+                    <p class="subtitle">Join WorkX as a User or Writer</p>
+
+                    <form id="signupForm">
+                        <div class="form-group">
+                            <label>I want to be a:</label>
+                            <div class="role-selector">
+                                <label class="role-option">
+                                    <input type="radio" name="user_type" value="user" required>
+                                    <span class="role-card">
+                                        <div class="role-icon">👤</div>
+                                        <strong>User</strong>
+                                        <small>Request work</small>
+                                    </span>
+                                </label>
+                                <label class="role-option">
+                                    <input type="radio" name="user_type" value="writer" required>
+                                    <span class="role-card">
+                                        <div class="role-icon">✍️</div>
+                                        <strong>Writer</strong>
+                                        <small>Complete tasks</small>
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="username">Username <span class="required">*</span></label>
+                            <input type="text" id="username" name="username" class="form-control" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email">Email <span class="required">*</span></label>
+                            <input type="email" id="email" name="email" class="form-control" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="phone">Phone Number <span class="required">*</span></label>
+                            <input type="tel" id="phone" name="phone" class="form-control" placeholder="+91 1234567890" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="password">Password <span class="required">*</span></label>
+                            <input type="password" id="password" name="password" class="form-control" minlength="6" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="confirmPassword">Confirm Password <span class="required">*</span></label>
+                            <input type="password" id="confirmPassword" name="confirmPassword" class="form-control" required>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-block">Create Account</button>
+                    </form>
+
+                    <div class="auth-footer">
+                        <p>Already have an account? <a href="/login">Login here</a></p>
+                    </div>
+                </div>
+
+                <div class="auth-info">
+                    <div class="info-box">
+                        <h3>👤 As a User</h3>
+                        <ul>
+                            <li>Submit work requests</li>
+                            <li>Upload reference files</li>
+                            <li>Track your orders</li>
+                            <li>Download completed work</li>
+                        </ul>
+                    </div>
+                    <div class="info-box">
+                        <h3>✍️ As a Writer</h3>
+                        <ul>
+                            <li>Browse available tasks</li>
+                            <li>Claim assignments</li>
+                            <li>Earn fair compensation</li>
+                            <li>Build your reputation</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 WorkX - Campus Work Exchange Platform</p>
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById('signupForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const password = formData.get('password');
+            const confirmPassword = formData.get('confirmPassword');
+
+            if (password !== confirmPassword) {
+                alert('Passwords do not match!');
+                return;
+            }
+
+            if (password.length < 6) {
+                alert('Password must be at least 6 characters long');
+                return;
+            }
+
+            const data = {
+                user_type: formData.get('user_type'),
+                username: formData.get('username'),
+                email: formData.get('email'),
+                phone: formData.get('phone'),
+                password: password
+            };
+
+            if (!data.user_type) {
+                alert('Please select whether you want to be a User or Writer');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/signup', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    alert(result.message + ' Please login.');
+                    window.location.href = '/login';
+                } else {
+                    alert('Error: ' + result.error);
+                }
+            } catch (error) {
+                alert('Signup failed: ' + error.message);
+            }
+        });
+    </script>
+</body>
+</html>

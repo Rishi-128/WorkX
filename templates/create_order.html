@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Order - WorkX</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <h1>WorkX</h1>
+                <p class="tagline">Campus Work Exchange</p>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="/">Home</a></li>
+                <li><a href="/pricing">Pricing</a></li>
+                <li><a href="/create-order" class="active">Create Order</a></li>
+                <li><a href="/user-task">Track Order</a></li>
+                <li><a href="/admin" class="admin-link">Admin</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section class="order-section">
+        <div class="container">
+            <div class="order-header">
+                <h2>Create New Order</h2>
+                <p>Fill in the details below to submit your work request</p>
+            </div>
+
+            <div class="order-layout">
+                <div class="order-form-container">
+                    <form id="orderForm" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label for="workType">Work Type <span class="required">*</span></label>
+                            <select id="workType" name="work_type" class="form-control" required>
+                                <option value="">-- Select Work Type --</option>
+                                <option value="Blue Book">Blue Book</option>
+                                <option value="Observation">Observation</option>
+                                <option value="Record-Ruled">Record (Ruled)</option>
+                                <option value="Record-Unruled">Record (Unruled)</option>
+                                <option value="PPT">PPT (Presentation)</option>
+                                <option value="Word Doc">Word Document</option>
+                                <option value="Report">Report (Soft Copy)</option>
+                            </select>
+                            <div id="priceInfo" class="price-info-box" style="display: none; margin-top: 1rem; padding: 1rem; background: #f0f4ff; border-radius: 8px; border-left: 4px solid #4f46e5;">
+                                <strong style="color: #4f46e5;">📊 Pricing for <span id="selectedWorkType"></span>:</strong>
+                                <div style="margin-top: 0.5rem;">
+                                    <p style="margin: 0.25rem 0;"><strong>Base Price:</strong> <span id="basePrice"></span></p>
+                                    <p style="margin: 0.25rem 0;"><strong>Platform Fee (12%):</strong> <span id="platformFee"></span></p>
+                                    <p style="margin: 0.25rem 0; color: #4f46e5; font-size: 1.1rem;"><strong>You Pay:</strong> <span id="finalPrice"></span></p>
+                                    <p style="margin: 0.25rem 0; color: #10b981;"><strong>Writer Gets:</strong> <span id="writerPayout"></span></p>
+                                    <p style="margin-top: 0.5rem; font-size: 0.9rem; color: #666;"><em>Note: Final price determined after counting actual pages in completed work</em></p>
+                                </div>
+                            </div>
+                            <small class="form-help" style="margin-top: 0.5rem; display: block;">
+                                <a href="/pricing" target="_blank" style="color: #4f46e5; font-weight: 600;">📊 View Full Rate Card</a>
+                            </small>
+                        </div>
+
+                        <div class="form-group" id="materialOptionGroup" style="display: none;">
+                            <label>Material Option <span class="required">*</span></label>
+                            <div class="radio-group">
+                                <label class="radio-label">
+                                    <input type="radio" name="material_option" value="provide" checked>
+                                    <span>I will provide the material</span>
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="material_option" value="buy">
+                                    <span id="buyOptionText">Buy material (+₹20)</span>
+                                </label>
+                            </div>
+                            <small class="form-help">Choose whether you'll provide the blue book/record or we should purchase it for you</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="deadline">Deadline Date <span class="required">*</span></label>
+                            <input type="date" id="deadline" name="deadline" class="form-control" required>
+                            <small class="form-help" id="sameDayWarning" style="display: none; color: #f59e0b; font-weight: 600;">⚠️ Same-day orders incur 25% extra charge</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="deadlineTime">Deadline Time <span class="required">*</span></label>
+                            <select id="deadlineTime" name="deadline_time" class="form-control" required>
+                                <option value="">Select time slot</option>
+                                <option value="08:00-10:00">8:00 AM - 10:00 AM</option>
+                                <option value="10:00-12:00">10:00 AM - 12:00 PM</option>
+                                <option value="12:00-14:00">12:00 PM - 2:00 PM</option>
+                                <option value="14:00-16:00">2:00 PM - 4:00 PM</option>
+                                <option value="16:00-18:00">4:00 PM - 6:00 PM</option>
+                                <option value="18:00-20:00">6:00 PM - 8:00 PM</option>
+                                <option value="20:00-22:00">8:00 PM - 10:00 PM</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="files">Upload Content/Instructions <span class="required">*</span></label>
+                            <input type="file" id="files" name="files" class="form-control" multiple accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg" required>
+                            <small class="form-help">Upload the content to be written, instructions, or reference materials (Required, Max 16MB per file)</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="notes">Additional Notes (Optional)</label>
+                            <textarea id="notes" name="notes" class="form-control" rows="4" placeholder="Any special instructions or requirements..."></textarea>
+                        </div>
+
+                        <button type="submit" id="submitBtn" class="btn btn-primary btn-large">
+                            Submit Order
+                        </button>
+                    </form>
+                </div>
+
+                <div class="order-sidebar">
+                    <div class="info-card-sidebar">
+                        <h4>📋 How It Works</h4>
+                        <ul class="process-list">
+                            <li>✓ Submit your work request</li>
+                            <li>✓ Admin reviews & sets price</li>
+                            <li>✓ Writer is assigned</li>
+                            <li>✓ Work completed by deadline</li>
+                            <li>✓ Download & pay offline</li>
+                        </ul>
+                    </div>
+
+                    <div class="info-card-sidebar">
+                        <h4>💰 Pricing Info</h4>
+                        <p>Admin will determine the final price based on:</p>
+                        <ul>
+                            <li>Work type</li>
+                            <li>Number of pages</li>
+                            <li>Complexity</li>
+                            <li>Deadline</li>
+                        </ul>
+                        <p><a href="/pricing">View base rates</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>✅ Order Created Successfully!</h3>
+            </div>
+            <div class="modal-body">
+                <p>Your Task ID is:</p>
+                <div class="task-id-display">
+                    <span id="taskIdDisplay"></span>
+                </div>
+                <p class="modal-info">Your order has been submitted. A writer will claim and complete your work. Final price will be determined after counting actual pages.</p>
+            </div>
+            <div class="modal-footer">
+                <a href="/user-dashboard" class="btn btn-primary">Go to Dashboard</a>
+                <button onclick="closeModal()" class="btn btn-secondary">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 WorkX - Campus Work Exchange Platform</p>
+            <p>Complete Anonymity • Fair Pricing • Quality Verified</p>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        // Set minimum date to today
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('deadline').min = today;
+        
+        // Check for same-day deadline and show warning
+        document.getElementById('deadline').addEventListener('change', function() {
+            const selectedDate = this.value;
+            const sameDayWarning = document.getElementById('sameDayWarning');
+            
+            if (selectedDate === today) {
+                sameDayWarning.style.display = 'block';
+            } else {
+                sameDayWarning.style.display = 'none';
+            }
+        });
+
+        // Pricing data
+        const RATE_CARD = {
+            'Blue Book': { base: 15, unit: 'page' },
+            'Observation': { base: 17, unit: 'page' },
+            'Record-Ruled': { base: 20, unit: 'page' },
+            'Record-Unruled': { base: 15, unit: 'page' },
+            'PPT': { base: 60, unit: '10 slides' },
+            'Word Doc': { base: 50, unit: 'document' },
+            'Report': { base: 100, unit: 'document' }
+        };
+
+        // Show/hide material option based on work type
+        const workTypeSelect = document.getElementById('workType');
+        const materialOptionGroup = document.getElementById('materialOptionGroup');
+        const buyOptionText = document.getElementById('buyOptionText');
+        const priceInfo = document.getElementById('priceInfo');
+        
+        workTypeSelect.addEventListener('change', function() {
+            const workType = this.value;
+            
+            // Show/hide material option
+            if (workType === 'Blue Book') {
+                materialOptionGroup.style.display = 'block';
+                buyOptionText.textContent = 'Buy Blue Book (+₹20)';
+            } else if (workType === 'Record-Ruled' || workType === 'Record-Unruled') {
+                materialOptionGroup.style.display = 'block';
+                buyOptionText.textContent = 'Buy Record Book (+₹90)';
+            } else {
+                materialOptionGroup.style.display = 'none';
+            }
+            
+            // Show pricing info
+            if (workType && RATE_CARD[workType]) {
+                const rate = RATE_CARD[workType];
+                const basePrice = rate.base;
+                const platformFee = (basePrice * 0.12).toFixed(2);
+                const finalPrice = (basePrice + parseFloat(platformFee)).toFixed(2);
+                const writerPayout = basePrice.toFixed(2);
+                
+                document.getElementById('selectedWorkType').textContent = workType;
+                document.getElementById('basePrice').textContent = `₹${basePrice}/${rate.unit}`;
+                document.getElementById('platformFee').textContent = `₹${platformFee}/${rate.unit}`;
+                document.getElementById('finalPrice').textContent = `₹${finalPrice}/${rate.unit}`;
+                document.getElementById('writerPayout').textContent = `₹${writerPayout}/${rate.unit}`;
+                priceInfo.style.display = 'block';
+            } else {
+                priceInfo.style.display = 'none';
+            }
+        });
+
+        // Submit Order
+        document.getElementById('orderForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData(e.target);
+            
+            // Show loading
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submitting...';
+
+            try {
+                const response = await fetch('/api/create_task', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    document.getElementById('taskIdDisplay').textContent = data.task_id;
+                    document.getElementById('successModal').style.display = 'flex';
+                    
+                    // Reset form
+                    e.target.reset();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (error) {
+                alert('Failed to create order: ' + error.message);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit Order';
+            }
+        });
+
+        function closeModal() {
+            document.getElementById('successModal').style.display = 'none';
+            window.location.href = '/user-dashboard';
+        }
+
+        // Close modal on outside click
+        window.onclick = function(event) {
+            const modal = document.getElementById('successModal');
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>

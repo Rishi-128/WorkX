@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pricing - WorkX</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <h1>WorkX</h1>
+                <p class="tagline">Campus Work Exchange</p>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="/">Home</a></li>
+                <li><a href="/pricing" class="active">Pricing</a></li>
+                {% if session.get('user_id') %}
+                    {% if session.get('user_role') == 'user' %}
+                        <li><a href="/user-dashboard">Dashboard</a></li>
+                    {% elif session.get('user_role') == 'writer' %}
+                        <li><a href="/writer-dashboard">Dashboard</a></li>
+                    {% elif session.get('user_role') == 'admin' %}
+                        <li><a href="/admin">Admin Panel</a></li>
+                    {% endif %}
+                    <li><a href="/logout" class="btn-logout">Logout</a></li>
+                {% else %}
+                    <li><a href="/login">Login</a></li>
+                    <li><a href="/signup" class="btn-primary-nav">Sign Up</a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+
+    <section class="pricing-section">
+        <div class="container">
+            <div class="pricing-header">
+                <h2>Transparent Pricing</h2>
+                <p>No hidden charges. Fair rates for everyone.</p>
+            </div>
+
+            <div class="pricing-info-cards">
+                <div class="info-card">
+                    <div class="info-icon">💰</div>
+                    <h4>Platform Fee</h4>
+                    <p>Fixed 12% on base price</p>
+                </div>
+                <div class="info-card">
+                    <div class="info-icon">✍️</div>
+                    <h4>Writer Gets</h4>
+                    <p>Full base price amount</p>
+                </div>
+                <div class="info-card">
+                    <div class="info-icon">🔒</div>
+                    <h4>Payment Mode</h4>
+                    <p>Offline to admin only</p>
+                </div>
+            </div>
+
+            <div class="pricing-table-container">
+                <table class="pricing-table">
+                    <thead>
+                        <tr>
+                            <th>Work Type</th>
+                            <th>Base Price</th>
+                            <th>Platform Fee (12%)</th>
+                            <th>Final Price (You Pay)</th>
+                            <th>Writer Gets</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <strong>Blue Book</strong>
+                                <span class="work-desc">Per page</span>
+                            </td>
+                            <td>₹15/page</td>
+                            <td>₹2/page</td>
+                            <td class="price-highlight">₹17/page</td>
+                            <td class="writer-payout">₹15/page</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <strong>Observation</strong>
+                                <span class="work-desc">Per page</span>
+                            </td>
+                            <td>₹17/page</td>
+                            <td>₹2/page</td>
+                            <td class="price-highlight">₹19/page</td>
+                            <td class="writer-payout">₹17/page</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <strong>Record (Ruled)</strong>
+                                <span class="work-desc">Per page</span>
+                            </td>
+                            <td>₹20/page</td>
+                            <td>₹2/page</td>
+                            <td class="price-highlight">₹22/page</td>
+                            <td class="writer-payout">₹20/page</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <strong>Record (Unruled)</strong>
+                                <span class="work-desc">Per page</span>
+                            </td>
+                            <td>₹15/page</td>
+                            <td>₹2/page</td>
+                            <td class="price-highlight">₹17/page</td>
+                            <td class="writer-payout">₹15/page</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <strong>PPT</strong>
+                                <span class="work-desc">Per 10 slides</span>
+                            </td>
+                            <td>₹50–₹70</td>
+                            <td>₹6–₹8</td>
+                            <td class="price-highlight">₹56–₹78</td>
+                            <td class="writer-payout">₹50–₹70</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <strong>Word Document</strong>
+                                <span class="work-desc">Per document</span>
+                            </td>
+                            <td>₹50</td>
+                            <td>₹6</td>
+                            <td class="price-highlight">₹56</td>
+                            <td class="writer-payout">₹50</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <strong>Report (Soft Copy)</strong>
+                                <span class="work-desc">Per report</span>
+                            </td>
+                            <td>₹100</td>
+                            <td>₹12</td>
+                            <td class="price-highlight">₹112</td>
+                            <td class="writer-payout">₹100</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pricing-notes">
+                <h3>Important Notes</h3>
+                <ul>
+                    <li>✓ All prices are inclusive of GST</li>
+                    <li>✓ Prices multiply by number of pages/units</li>
+                    <li>✓ Quality verification included in every order</li>
+                    <li>✓ Payment only after delivery and satisfaction</li>
+                    <li>✓ No advance payment required</li>
+                    <li>✓ Admin collects payment offline (cash/UPI)</li>
+                    <li>✓ Writer receives payout after user payment confirmation</li>
+                </ul>
+            </div>
+
+            <div class="pricing-examples">
+                <h3>Pricing Examples</h3>
+                <div class="example-grid">
+                    <div class="example-card">
+                        <h4>Blue Book - 10 Pages</h4>
+                        <div class="example-calc">
+                            <p>Base: ₹15 × 10 = ₹150</p>
+                            <p>Fee: ₹2 × 10 = ₹20</p>
+                            <p class="example-total">You Pay: ₹170</p>
+                            <p class="example-writer">Writer Gets: ₹150</p>
+                        </div>
+                    </div>
+                    <div class="example-card">
+                        <h4>Record (Ruled) - 25 Pages</h4>
+                        <div class="example-calc">
+                            <p>Base: ₹20 × 25 = ₹500</p>
+                            <p>Fee: ₹2 × 25 = ₹50</p>
+                            <p class="example-total">You Pay: ₹550</p>
+                            <p class="example-writer">Writer Gets: ₹500</p>
+                        </div>
+                    </div>
+                    <div class="example-card">
+                        <h4>PPT - 3 Sets (30 slides)</h4>
+                        <div class="example-calc">
+                            <p>Base: ₹60 × 3 = ₹180</p>
+                            <p>Fee: ₹7 × 3 = ₹21</p>
+                            <p class="example-total">You Pay: ₹201</p>
+                            <p class="example-writer">Writer Gets: ₹180</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="cta-section">
+                <h3>Ready to Get Started?</h3>
+                <p>Create your first order now and experience seamless work exchange</p>
+                <a href="/create-order" class="btn btn-primary btn-large">Create Order Now</a>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 WorkX - Campus Work Exchange Platform</p>
+            <p>Complete Anonymity • Fair Pricing • Quality Verified</p>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
