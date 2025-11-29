@@ -793,6 +793,37 @@ def download_user_file(task_id, file_index):
 def get_rate_card():
     return jsonify(RATE_CARD)
 
+@app.route('/api/calculate_price', methods=['POST'])
+def calculate_price():
+    """Calculate price based on work type and pages"""
+    try:
+        data = request.json
+        work_type = data.get('work_type')
+        pages = data.get('pages', 1)
+        
+        if not work_type or work_type not in RATE_CARD:
+            return jsonify({'error': 'Invalid work type'}), 400
+        
+        if not isinstance(pages, int) or pages < 1:
+            return jsonify({'error': 'Invalid number of pages'}), 400
+        
+        # Get base rate from rate card
+        rate_info = RATE_CARD[work_type]
+        base_price = rate_info['base'] * pages
+        platform_fee = rate_info['fee'] * pages
+        final_price = base_price + platform_fee
+        worker_payout = base_price
+        
+        return jsonify({
+            'base_price': base_price,
+            'platform_fee': platform_fee,
+            'final_price': final_price,
+            'worker_payout': worker_payout,
+            'unit': rate_info['unit']
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/health', methods=['GET'])
 def health_check():
     """Health check endpoint to verify API is running"""

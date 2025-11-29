@@ -13,7 +13,11 @@
                 <h1>WorkX</h1>
                 <p class="tagline">Writer Dashboard</p>
             </div>
-            <ul class="nav-menu">
+            <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">
+                <span class="hamburger-icon">☰</span>
+            </button>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="/" class="">Home</a></li>
                 <li><a href="/writer-dashboard" class="active">Dashboard</a></li>
                 <li><a href="/pricing">Pricing</a></li>
                 <li><a href="/logout">Logout</a></li>
@@ -243,12 +247,12 @@
                                     </ul>
                                 </div>
                             ` : ''}
-                            ${task.admin_uploaded_result ? '<p class="task-completed">✅ Submitted to admin</p>' : '<p class="text-warning">⏳ Submit to admin when complete</p>'}
+                            ${task.status === 'Completed' || task.status === 'Delivered' ? '<p class="task-completed">✅ Submitted to admin</p>' : '<p class="text-warning">⏳ Submit to admin when complete</p>'}
                         </div>
                         <div class="task-footer">
-                            ${!task.admin_uploaded_result && (task.status === 'In Progress' || task.status === 'Assigned') ? 
+                            ${task.status === 'In Progress' || task.status === 'Assigned' ? 
                                 '<button onclick="markComplete(\'' + task.task_id + '\')" class="btn btn-sm btn-success">✅ Mark Complete</button>' : 
-                                task.admin_uploaded_result ? '<span class="badge badge-success">Submitted</span>' : ''}
+                                (task.status === 'Completed' || task.status === 'Delivered') ? '<span class="badge badge-success">Submitted</span>' : ''}
                         </div>
                         <div class="task-footer">
                             ${task.writer_paid ? '<span class="badge-success">💰 Paid</span>' : '<span class="badge-warning">💰 Payment Pending</span>'}
@@ -350,6 +354,26 @@
         // Initial load
         loadAvailableTasks();
         loadMyTasks();
+
+        // Mobile menu toggle
+        document.getElementById('mobileMenuToggle').addEventListener('click', function() {
+            const navMenu = document.getElementById('navMenu');
+            navMenu.classList.toggle('active');
+        });
+        // Close menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const navMenu = document.getElementById('navMenu');
+            const menuToggle = document.getElementById('mobileMenuToggle');
+            if (!navMenu.contains(event.target) && !menuToggle.contains(event.target)) {
+                navMenu.classList.remove('active');
+            }
+        });
+        // Close menu when clicking a link
+        document.querySelectorAll('.nav-menu a').forEach(link => {
+            link.addEventListener('click', function() {
+                document.getElementById('navMenu').classList.remove('active');
+            });
+        });
     </script>
 
     <!-- Admin Contact Modal -->

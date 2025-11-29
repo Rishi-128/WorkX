@@ -13,7 +13,11 @@
                 <h1>WorkX</h1>
                 <p class="tagline">User Dashboard</p>
             </div>
-            <ul class="nav-menu">
+            <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">
+                <span class="hamburger-icon">☰</span>
+            </button>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="/" class="">Home</a></li>
                 <li><a href="/user-dashboard" class="active">My Orders</a></li>
                 <li><a href="/create-order">New Order</a></li>
                 <li><a href="/pricing">Pricing</a></li>
@@ -21,6 +25,28 @@
             </ul>
         </div>
     </nav>
+
+    <script>
+        // Mobile menu toggle
+        document.getElementById('mobileMenuToggle').addEventListener('click', function() {
+            const navMenu = document.getElementById('navMenu');
+            navMenu.classList.toggle('active');
+        });
+        // Close menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const navMenu = document.getElementById('navMenu');
+            const menuToggle = document.getElementById('mobileMenuToggle');
+            if (!navMenu.contains(event.target) && !menuToggle.contains(event.target)) {
+                navMenu.classList.remove('active');
+            }
+        });
+        // Close menu when clicking a link
+        document.querySelectorAll('.nav-menu a').forEach(link => {
+            link.addEventListener('click', function() {
+                document.getElementById('navMenu').classList.remove('active');
+            });
+        });
+    </script>
 
     <section class="dashboard-section">
         <div class="container">
