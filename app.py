@@ -10,10 +10,22 @@ from flask_pymongo import PyMongo
 from bson import ObjectId
 
 app = Flask(__name__)
-app.config["MONGO_URI"] = os.environ.get("MONGO_URI")
-app.secret_key = os.environ.get("SECRET_KEY")
+
+# Get environment variables with error checking
+MONGO_URI = os.environ.get("MONGO_URI")
+SECRET_KEY = os.environ.get("SECRET_KEY")
+
+if not MONGO_URI:
+    raise ValueError("MONGO_URI environment variable is not set")
+if not SECRET_KEY:
+    raise ValueError("SECRET_KEY environment variable is not set")
+
+app.config["MONGO_URI"] = MONGO_URI
+app.secret_key = SECRET_KEY
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 app.config['ALLOWED_EXTENSIONS'] = {'pdf', 'doc', 'docx', 'txt', 'png', 'jpg', 'jpeg'}
+app.config['SESSION_COOKIE_SECURE'] = True  # Required for Vercel HTTPS
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Prevent CSRF
 
 mongo = PyMongo(app)
 db = mongo.db
@@ -718,6 +730,23 @@ def download_user_file(task_id, file_index):
 @app.route('/api/rate_card', methods=['GET'])
 def get_rate_card():
     return jsonify(RATE_CARD)
+
+@app.route('/api/health', methods=['GET'])
+def health_check():
+    """Health check endpoint to verify API is running"""
+    try:
+        # Test MongoDB connection
+        db.command('ping')
+        return jsonify({
+            'status': 'healthy',
+            'mongodb': 'connected',
+            'environment': 'production' if os.environ.get('VERCEL') else 'local'
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'unhealthy',
+            'error': str(e)
+        }), 500
 
 # Vercel serverless function handler
 app_handler = app
