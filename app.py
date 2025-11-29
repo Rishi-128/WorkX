@@ -20,12 +20,22 @@ if not MONGO_URI:
 if not SECRET_KEY:
     raise ValueError("SECRET_KEY environment variable is not set")
 
+# Fix SSL issues on Vercel by adding SSL parameters
+if '?' in MONGO_URI:
+    MONGO_URI = f"{MONGO_URI}&tlsAllowInvalidCertificates=true"
+else:
+    MONGO_URI = f"{MONGO_URI}?tlsAllowInvalidCertificates=true"
+
 app.config["MONGO_URI"] = MONGO_URI
 app.secret_key = SECRET_KEY
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 app.config['ALLOWED_EXTENSIONS'] = {'pdf', 'doc', 'docx', 'txt', 'png', 'jpg', 'jpeg'}
-app.config['SESSION_COOKIE_SECURE'] = True  # Required for Vercel HTTPS
-app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Prevent CSRF
+
+# Session configuration for Vercel
+app.config['SESSION_COOKIE_SECURE'] = False  # Set to True only in production HTTPS
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hour
 
 mongo = PyMongo(app)
 db = mongo.db
@@ -231,6 +241,8 @@ def login():
         password = data.get('password')
         user_type = data.get('user_type')  # 'user', 'writer', or 'admin'
         
+        print(f"Login attempt - Username: {username}, Type: {user_type}")  # Debug log
+        
         if not all([username, password, user_type]):
             return jsonify({'error': 'All fields required'}), 400
         
@@ -241,11 +253,14 @@ def login():
                 session['user_id'] = 'admin'
                 session['username'] = username
                 session['user_role'] = 'admin'
+                session.permanent = True
+                print(f"Admin login successful: {username}")  # Debug log
                 return jsonify({
                     'success': True,
                     'role': 'admin',
                     'redirect': '/admin'
                 })
+            print(f"Admin login failed: {username}")  # Debug log
             return jsonify({'error': 'Invalid admin credentials'}), 401
         
         # User/Writer login
@@ -260,8 +275,11 @@ def login():
             session['username'] = user['username']
             session['user_role'] = user_type
             session['user_email'] = user['email']
+            session.permanent = True
             
             redirect_url = '/user-dashboard' if user_type == 'user' else '/writer-dashboard'
+            
+            print(f"Login successful - User: {username}, Type: {user_type}")  # Debug log
             
             return jsonify({
                 'success': True,
@@ -269,8 +287,10 @@ def login():
                 'redirect': redirect_url
             })
         
+        print(f"Login failed - User: {username}, Type: {user_type}")  # Debug log
         return jsonify({'error': 'Invalid credentials'}), 401
     except Exception as e:
+        print(f"Login error: {str(e)}")  # Debug log
         return jsonify({'error': str(e)}), 500
 
 @app.route('/logout')
